@@ -1,0 +1,9 @@
+ # rc 
+
+Remember the last command of the terminal and its frequency 
+
+### changelog
+
+#### 2020-08-11
+
+* 记录命令以及其记录频率，按照频率大小从高到低显示命令
