@@ -9,12 +9,14 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type (
 	CacheDetail struct {
-		Cmd   string
-		Times uint32
+		Cmd        string
+		Times      uint32
+		LastUpdate string
 	}
 	Cache map[string]*CacheDetail
 
@@ -107,10 +109,12 @@ func getCommands() (Cache, error) {
 func setCommand(cache Cache, cmd string) error {
 	if _, exist := cache[cmd]; exist {
 		cache[cmd].Times++
+		cache[cmd].LastUpdate = time.Now().Format("2006-01-02 15:04:03")
 	} else {
 		cache[cmd] = &CacheDetail{
 			Cmd:   cmd,
 			Times: 1,
+			LastUpdate: time.Now().Format("2006-01-02 15:04:03"),
 		}
 	}
 	encode, err := json.Marshal(cache)

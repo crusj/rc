@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+	"os"
 	"sort"
+	"strconv"
 )
 
 /**
@@ -17,12 +19,17 @@ type (
 func (s SortSlice) Len() int           { return len(s) }
 func (s SortSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s SortSlice) Less(i, j int) bool { return s[i].Times < s[j].Times }
-func (s SortSlice) String() string {
-	str := bytes.Buffer{}
+func (s SortSlice) Render() {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader([]string{"Fre", "Cmd", "Last Update"})
 	for i := len(s) - 1; i >= 0; i-- {
-		str.WriteString(fmt.Sprintf("%d:%s\n", s[i].Times, s[i].Cmd))
+		table.Append([]string{
+			strconv.FormatUint(uint64(s[i].Times), 10),
+			s[i].Cmd,
+			s[i].LastUpdate,
+		})
 	}
-	return str.String()
+	table.Render()
 }
 
 var (
@@ -51,7 +58,7 @@ func handleList() error {
 	}
 	s := sortCommands(cache)
 	// 打印
-	fmt.Println(s)
+	s.Render()
 	return nil
 }
 
