@@ -21,12 +21,13 @@ func (s SortSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 func (s SortSlice) Less(i, j int) bool { return s[i].Times < s[j].Times }
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Fre", "Cmd", "Last Update"})
+	table.SetHeader([]string{"Fre", "Cmd", "Last Update", "Extra"})
 	for i := len(s) - 1; i >= 0; i-- {
 		table.Append([]string{
 			strconv.FormatUint(uint64(s[i].Times), 10),
 			s[i].Cmd,
 			s[i].LastUpdate,
+			s[i].Extra,
 		})
 	}
 	table.Render()
@@ -35,8 +36,8 @@ func (s SortSlice) Render() {
 var (
 	listCmd = &cobra.Command{
 		Use:   "l",
-		Short: "short description",
-		Long:  "long description",
+		Short: "list commands",
+		Long:  "list commands with table",
 		Run: func(cmd *cobra.Command, args []string) {
 			err := handleList()
 			if err != nil {
