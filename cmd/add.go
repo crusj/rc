@@ -45,7 +45,7 @@ var (
 		Short: "add cmd",
 		Long:  "add cmd from history file or update cmd frequency",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := handle(append(args, "")[0])
+			err := handleAdd(append(args, "")[0])
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -57,7 +57,7 @@ func init() {
 	rootCmd.AddCommand(addCmd)
 }
 
-func handle(extra string) error {
+func handleAdd(extra string) error {
 	// 获取最后一条命令
 	lastCommand := getLastCommand()
 	// 获取已添加的命令

@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 )
 
 /**
@@ -16,19 +17,29 @@ type (
 	SortSlice []*CacheDetail
 )
 
-func (s SortSlice) Len() int           { return len(s) }
-func (s SortSlice) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s SortSlice) Less(i, j int) bool { return s[i].Times < s[j].Times }
+func (s SortSlice) Len() int      { return len(s) }
+func (s SortSlice) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+func (s SortSlice) Less(i, j int) bool {
+	if s[i].Times == s[j].Times {
+		ti, _ := time.Parse("2006-01-02 15:04:05", s[i].LastUpdate)
+		tj, _ := time.Parse("2006-01-02 15:04:05", s[j].LastUpdate)
+		return ti.Before(tj)
+	}
+	return s[i].Times < s[j].Times
+}
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Fre", "Cmd", "Last Update", "Extra"})
+	table.SetHeader([]string{"Id", "Fre", "Cmd", "Last Update", "Extra"})
+	id := 1
 	for i := len(s) - 1; i >= 0; i-- {
 		table.Append([]string{
+			strconv.Itoa(id),
 			strconv.FormatUint(uint64(s[i].Times), 10),
 			s[i].Cmd,
 			s[i].LastUpdate,
 			s[i].Extra,
 		})
+		id++
 	}
 	table.Render()
 }
