@@ -25,7 +25,7 @@ var (
 		Short: "add cmd",
 		Long:  "add cmd from history file or update cmd frequency",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 0 {
+			if len(args) <= 0 {
 				return errors.New("miss delete id")
 			}
 			for _, v := range args {

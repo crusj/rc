@@ -10,8 +10,7 @@ import (
 var (
 	rootCmd = &cobra.Command{
 		Use:   "rc",
-		Short: "short description",
-		Long:  "long description",
+		Long:  "remember and operate cli history command",
 	}
 )
 

@@ -38,8 +38,6 @@ type (
 )
 
 var (
-	historyPath = "/Users/edz/.local/share/fish/fish_history"
-	cachePath   = "/var/rc/cache.log"
 	addCmd      = &cobra.Command{
 		Use:   "add",
 		Short: "add cmd",

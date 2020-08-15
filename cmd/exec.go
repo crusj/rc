@@ -21,13 +21,14 @@ import (
 // 执行命令历史中的命令
 var (
 	execId  = 0
+	// 执行ID对应命令
 	execCmd = &cobra.Command{
 		Use:   "e",
 		Short: "exec command",
 		Long:  "exec ID Command",
 		Args: func(cmd *cobra.Command, args []string) error {
 			var err error
-			if len(args) < 0 {
+			if len(args) <= 0 {
 				return errors.New("miss exec id")
 			}
 			// 暂时支持一个命令执行
@@ -45,7 +46,7 @@ var (
 			}
 		},
 	}
-	// 编辑缓存
+	// 编辑命令缓存文件
 	cacheCmd = &cobra.Command{
 		Use:   "cache",
 		Short: "vim cache",
@@ -58,14 +59,14 @@ var (
 			}
 		},
 	}
-	// copy
+	// 赋值命令到clipboard
 	cpCmd = &cobra.Command{
 		Use:   "cp ID",
 		Short: "copy command",
 		Long:  "copy ID command to clipboard",
 		Args: func(cmd *cobra.Command, args []string) error {
 			var err error
-			if len(args) < 0 {
+			if len(args) <= 0 {
 				return errors.New("miss exec id")
 			}
 			// 暂时支持一个命令执行
@@ -102,10 +103,11 @@ func handleEditCache() error {
 	if stdErr.Len() != 0 {
 		fmt.Println(stdErr.String())
 	}
+
 	return nil
 }
 func handleExec() error {
-	execCmd, err := getCommandByExecId()
+	execCmd, err := getCommand()
 	if err != nil {
 		return err
 	}
@@ -121,7 +123,6 @@ func handleExec() error {
 	cmdInfo := color.Green.Sprint("✔ " + execCmd + "\n")
 	command.Stderr = stdErr
 	cmdError := color.Red.Sprint("✗ " + execCmd + "\n")
-
 	err = command.Run()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -139,14 +140,14 @@ func handleExec() error {
 	return nil
 }
 func handleCpExec() error {
-
-	execCmd, err := getCommandByExecId()
+	execCmd, err := getCommand()
 	if err != nil {
 		return err
 	}
+
 	return clipboard.WriteAll(execCmd)
 }
-func getCommandByExecId() (string, error) {
+func getCommand() (string, error) {
 	var (
 		execCmd string
 	)
@@ -158,7 +159,6 @@ func getCommandByExecId() (string, error) {
 	}
 	// 排序
 	sortSlice := sortCommands(cache)
-
 	// 排序为频率从大到小需要倒着取
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
@@ -167,8 +167,10 @@ func getCommandByExecId() (string, error) {
 		}
 		j++
 	}
+
 	if len(execCmd) == 0 {
 		return "", errors.New("invalid command")
 	}
+
 	return execCmd, nil
 }
