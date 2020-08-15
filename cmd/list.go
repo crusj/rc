@@ -29,6 +29,7 @@ func (s SortSlice) Less(i, j int) bool {
 }
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
+	table.SetAutoWrapText(false)
 	table.SetHeader([]string{"Id", "Fre", "Cmd", "Last Update", "Extra"})
 	id := 1
 	for i := len(s) - 1; i >= 0; i-- {
