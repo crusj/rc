@@ -12,4 +12,9 @@ Remember the last command of the terminal and its frequency
 #### 2020-08-12
 
 * 记录命令时候增加备注信息
+* 增加记录删除命令
+
+#### 2020-08-15
+
+* 增加历史命令执行功能
 
