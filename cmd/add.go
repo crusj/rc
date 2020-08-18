@@ -38,7 +38,7 @@ type (
 )
 
 var (
-	addCmd      = &cobra.Command{
+	addCmd = &cobra.Command{
 		Use:   "add",
 		Short: "add cmd",
 		Long:  "add cmd from history file or update cmd frequency",

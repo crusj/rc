@@ -30,15 +30,15 @@ func (s SortSlice) Less(i, j int) bool {
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetAutoWrapText(false)
-	table.SetHeader([]string{"Id", "Fre", "Cmd", "Last Update", "Extra"})
+	table.SetHeader([]string{"Id", "Cmd", "Extra", "FRE", "Last Update"})
 	id := 1
 	for i := len(s) - 1; i >= 0; i-- {
 		table.Append([]string{
 			strconv.Itoa(id),
-			strconv.FormatUint(uint64(s[i].Times), 10),
 			s[i].Cmd,
-			s[i].LastUpdate,
 			s[i].Extra,
+			strconv.FormatUint(uint64(s[i].Times), 10),
+			s[i].LastUpdate,
 		})
 		id++
 	}
