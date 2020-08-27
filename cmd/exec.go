@@ -9,18 +9,20 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/atotto/clipboard"
-	"github.com/gookit/color"
-	"github.com/spf13/cobra"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/atotto/clipboard"
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
 )
 
 // 执行命令历史中的命令
 var (
-	execId  = 0
+	// 命令ID
+	execID = 0
 	// 执行ID对应命令
 	execCmd = &cobra.Command{
 		Use:   "e",
@@ -28,11 +30,11 @@ var (
 		Long:  "exec ID Command",
 		Args: func(cmd *cobra.Command, args []string) error {
 			var err error
-			if len(args) <= 0 {
+			if len(args) == 0 {
 				return errors.New("miss exec id")
 			}
 			// 暂时支持一个命令执行
-			execId, err = strconv.Atoi(args[0])
+			execID, err = strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
@@ -52,8 +54,7 @@ var (
 		Short: "vim cache",
 		Long:  "vim cache",
 		Run: func(cmd *cobra.Command, args []string) {
-			var err error
-			err = handleEditCache()
+			err := handleEditCache()
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -66,11 +67,11 @@ var (
 		Long:  "copy ID command to clipboard",
 		Args: func(cmd *cobra.Command, args []string) error {
 			var err error
-			if len(args) <= 0 {
+			if len(args) == 0 {
 				return errors.New("miss exec id")
 			}
 			// 暂时支持一个命令执行
-			execId, err = strconv.Atoi(args[0])
+			execID, err = strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
@@ -78,8 +79,7 @@ var (
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var err error
-			err = handleCpExec()
+			err := handleCpExec()
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -111,42 +111,12 @@ func handleExec() error {
 	if err != nil {
 		return err
 	}
+	commands := &Commands{}
 
-	// 拆分命令
-	execSplit := strings.Split(execCmd, " ")
-
-	// 执行命令
-	command := exec.Command(execSplit[0], execSplit[1:]...)
-	stdOut := &bytes.Buffer{}
-	stdErr := &bytes.Buffer{}
-	command.Stdout = stdOut
-	cmdInfo := color.Green.Sprint("✔ " + execCmd + "\n")
-	command.Stderr = stdErr
-	cmdError := color.Red.Sprint("✗ " + execCmd + "\n")
-	err = command.Run()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	// 打印
-	if stdErr.Len() != 0 { // 错误
-		cmdError += stdErr.String()
-		println(cmdError)
-	} else { // 陈宫
-		cmdInfo += stdOut.String()
-		println(cmdInfo)
-	}
-
-	return nil
+	return commands.Handle(execCmd, "&&")
 }
-func handleCpExec() error {
-	execCmd, err := getCommand()
-	if err != nil {
-		return err
-	}
 
-	return clipboard.WriteAll(execCmd)
-}
+// 获取需要执行的命令
 func getCommand() (string, error) {
 	var (
 		execCmd string
@@ -159,10 +129,11 @@ func getCommand() (string, error) {
 	}
 	// 排序
 	sortSlice := sortCommands(cache)
-	// 排序为频率从大到小需要倒着取
+	// 根据排序ID获取需要执行的命令
+	// ID排序频率从大到小需要倒着取
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
-		if j == execId {
+		if j == execID {
 			execCmd = sortSlice[i].Cmd
 		}
 		j++
@@ -173,4 +144,66 @@ func getCommand() (string, error) {
 	}
 
 	return execCmd, nil
+}
+
+// 复制命令到剪切板
+func handleCpExec() error {
+	execCmd, err := getCommand()
+	if err != nil {
+		return err
+	}
+
+	return clipboard.WriteAll(execCmd)
+}
+
+// 命令
+type Commands struct {
+	Command []string
+	sep     string
+}
+
+// 根据分隔符拆分命令
+func (re *Commands) split(cmds, sep string) {
+	re.Command = strings.Split(cmds, sep)
+	re.sep = sep
+}
+func (re *Commands) Handle(cmds, sep string) error {
+	re.split(cmds, sep)
+	switch sep {
+	case "&&": // 连续执行多个命令
+		for _, v := range re.Command {
+			err := re.handleOne(v)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (re *Commands) handleOne(cmd string) error {
+	pieces := strings.Split(strings.TrimSpace(cmd), " ")
+	// 执行命令
+	command := exec.Command(pieces[0], pieces[1:]...)
+	stdOut := &bytes.Buffer{}
+	stdErr := &bytes.Buffer{}
+	command.Stdout = stdOut
+	cmdInfo := color.Green.Sprint("✔ " + cmd + "\n")
+	command.Stderr = stdErr
+	cmdError := color.Red.Sprint("✗ " + cmd + "\n")
+	err := command.Run()
+
+	if err != nil {
+		return errors.New(cmdError + color.Red.Sprintf(err.Error()))
+	}
+
+	// 打印
+	if stdErr.Len() != 0 { // 错误
+		cmdError += stdErr.String()
+		return errors.New(cmdError)
+	}
+	cmdInfo += stdOut.String()
+	println(cmdInfo)
+
+	return nil
 }
