@@ -2,6 +2,16 @@
 
 Remember the last command of the terminal and its frequency 
 
+### 配置
+
+```
+	historyPath = "/Users/edz/.local/share/fish/fish_history"
+	cachePath   = "/var/rc/cache.log"
+```
+### 依赖
+
+`/usr/local/bin/fish`
+
 ### changelog
 
 #### 2020-08-11
@@ -23,3 +33,6 @@ Remember the last command of the terminal and its frequency
 #### 2020-08-27
 * 修改命令用bash执行
 
+### todo
+
+* [ ] 配置文件
