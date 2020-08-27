@@ -21,5 +21,5 @@ Remember the last command of the terminal and its frequency
 * 增加将命令赋值到粘贴板
 
 #### 2020-08-27
-* &&多命令执行
+* 修改命令用bash执行
 

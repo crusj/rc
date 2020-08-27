@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
-	"strings"
 
 	"github.com/atotto/clipboard"
 	"github.com/gookit/color"
@@ -42,10 +41,7 @@ var (
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			err := handleExec()
-			if err != nil {
-				fmt.Println(err.Error())
-			}
+			handleExec()
 		},
 	}
 	// 编辑命令缓存文件
@@ -90,30 +86,17 @@ var (
 func init() {
 	rootCmd.AddCommand(execCmd, cacheCmd, cpCmd)
 }
-func handleEditCache() error {
-	command := exec.Command("vim", cachePath)
-	stdErr := &bytes.Buffer{}
-	command.Stdout = os.Stdout
-	command.Stdin = os.Stdin
-	command.Stderr = stdErr
-	if stdErr.Len() != 0 {
-		fmt.Println(stdErr.String())
-	}
-	_ = command.Run()
-	if stdErr.Len() != 0 {
-		fmt.Println(stdErr.String())
-	}
-
-	return nil
-}
-func handleExec() error {
+func handleExec() {
+	var printOutput string
 	execCmd, err := getCommand()
-	if err != nil {
-		return err
-	}
-	commands := &Commands{}
 
-	return commands.Handle(execCmd, "&&")
+	output, err := exec.Command("/usr/local/bin/fish", "-c", execCmd).Output()
+	if err != nil {
+		printOutput = color.Red.Sprint("✗ "+execCmd+"\n") + err.Error()
+	} else {
+		printOutput = color.Green.Sprint("✔ "+execCmd+"\n") + string(output)
+	}
+	fmt.Println(printOutput)
 }
 
 // 获取需要执行的命令
@@ -156,54 +139,20 @@ func handleCpExec() error {
 	return clipboard.WriteAll(execCmd)
 }
 
-// 命令
-type Commands struct {
-	Command []string
-	sep     string
-}
-
-// 根据分隔符拆分命令
-func (re *Commands) split(cmds, sep string) {
-	re.Command = strings.Split(cmds, sep)
-	re.sep = sep
-}
-func (re *Commands) Handle(cmds, sep string) error {
-	re.split(cmds, sep)
-	switch sep {
-	case "&&": // 连续执行多个命令
-		for _, v := range re.Command {
-			err := re.handleOne(v)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-func (re *Commands) handleOne(cmd string) error {
-	pieces := strings.Split(strings.TrimSpace(cmd), " ")
-	// 执行命令
-	command := exec.Command(pieces[0], pieces[1:]...)
-	stdOut := &bytes.Buffer{}
+// vim编辑缓存文件
+func handleEditCache() error {
+	command := exec.Command("vim", cachePath)
 	stdErr := &bytes.Buffer{}
-	command.Stdout = stdOut
-	cmdInfo := color.Green.Sprint("✔ " + cmd + "\n")
+	command.Stdout = os.Stdout
+	command.Stdin = os.Stdin
 	command.Stderr = stdErr
-	cmdError := color.Red.Sprint("✗ " + cmd + "\n")
-	err := command.Run()
-
-	if err != nil {
-		return errors.New(cmdError + color.Red.Sprintf(err.Error()))
+	if stdErr.Len() != 0 {
+		fmt.Println(stdErr.String())
 	}
-
-	// 打印
-	if stdErr.Len() != 0 { // 错误
-		cmdError += stdErr.String()
-		return errors.New(cmdError)
+	_ = command.Run()
+	if stdErr.Len() != 0 {
+		fmt.Println(stdErr.String())
 	}
-	cmdInfo += stdOut.String()
-	println(cmdInfo)
 
 	return nil
 }
