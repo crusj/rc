@@ -89,12 +89,22 @@ func init() {
 func handleExec() {
 	var printOutput string
 	execCmd, err := getCommand()
-
-	output, err := exec.Command("/usr/local/bin/fish", "-c", execCmd).Output()
 	if err != nil {
-		printOutput = color.Red.Sprint("✗ "+execCmd+"\n") + err.Error()
+		fmt.Println(color.Red.Sprintf("获取执行命令失败:" + err.Error()))
+
+		return
+	}
+
+	cmd := exec.Command("/usr/local/bin/fish", "-c", execCmd)
+	output := &bytes.Buffer{}
+	stdErr := &bytes.Buffer{}
+	cmd.Stdout = output
+	cmd.Stderr = stdErr
+	err = cmd.Run()
+	if err != nil {
+		printOutput = color.Red.Sprint("✗ "+execCmd+"\n") + stdErr.String() + err.Error()
 	} else {
-		printOutput = color.Green.Sprint("✔ "+execCmd+"\n") + string(output)
+		printOutput = color.Green.Sprint("✔ "+execCmd+"\n") + output.String()
 	}
 	fmt.Println(printOutput)
 }
