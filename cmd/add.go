@@ -9,12 +9,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/spf13/cobra"
 )
 
 /**
@@ -85,6 +86,7 @@ func getLastCommand() string {
 	_ = c2.Wait()
 	_ = c3.Wait()
 	_ = c4.Wait()
+
 	return strings.TrimSpace(stdOut.String())
 }
 
@@ -108,8 +110,8 @@ func getCommands() (Cache, error) {
 
 		return cache, nil
 	}
-	return make(Cache), nil
 
+	return make(Cache), nil
 }
 
 // 添加命令
@@ -138,5 +140,16 @@ func setCommand(cache Cache, cmd, extra string) error {
 			return err
 		}
 	}
+
 	return ioutil.WriteFile(cachePath, encode, 0666)
+}
+
+// 命令频率加一
+func cmdIncr(cmd string) error {
+	cache, err := getCommands()
+	if err != nil {
+		return err
+	}
+
+	return setCommand(cache, cmd, "")
 }

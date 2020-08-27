@@ -107,6 +107,14 @@ func handleExec() {
 		printOutput = color.Green.Sprint("✔ "+execCmd+"\n") + output.String()
 	}
 	fmt.Println(printOutput)
+
+	// 命令执行频率加一
+	err = cmdIncr(execCmd)
+	if err != nil {
+		fmt.Println(color.Red.Sprint("FRE INCR FAILED: " + err.Error()))
+	} else {
+		fmt.Println(color.Green.Sprint("FRE INCR"))
+	}
 }
 
 // 获取需要执行的命令

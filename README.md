@@ -32,6 +32,7 @@ Remember the last command of the terminal and its frequency
 
 #### 2020-08-27
 * 修改命令用bash执行
+* 执行缓存的命令后，频率自增1
 
 ### todo
 
