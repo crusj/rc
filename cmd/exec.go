@@ -21,20 +21,23 @@ import (
 var (
 	// execID 需要执行的命令ID
 	execID = 0
+	// AliasID 需要执行命令的ID别名
+	AliasID = ""
 	// execCmd 执行子命令
 	execCmd = &cobra.Command{
 		Use:   "e",
 		Short: "exec command",
 		Long:  "exec ID Command",
 		Args: func(cmd *cobra.Command, args []string) error {
-			var err error
 			if len(args) == 0 {
 				return errors.New("miss exec id")
 			}
-			// 暂时支持一个命令执行
-			execID, err = strconv.Atoi(args[0])
+			// 匹配ID
+			tmp, err := strconv.Atoi(args[0])
 			if err != nil {
-				return err
+				AliasID = args[0]
+			} else {
+				execID = tmp
 			}
 
 			return nil
@@ -136,8 +139,15 @@ func getCommand() (string, error) {
 	// ID排序频率从大到小需要倒着取
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
-		if j == execID {
+		if execID > 0 && j == execID {
 			execCmd = sortSlice[i].Cmd
+
+			break
+		}
+		if len(AliasID) > 0 && sortSlice[i].AliasID == AliasID {
+			execCmd = sortSlice[i].Cmd
+
+			break
 		}
 		j++
 	}

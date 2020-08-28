@@ -24,8 +24,10 @@ func (s SortSlice) Less(i, j int) bool {
 	if s[i].Times == s[j].Times {
 		ti, _ := time.Parse("2006-01-02 15:04:05", s[i].LastUpdate)
 		tj, _ := time.Parse("2006-01-02 15:04:05", s[j].LastUpdate)
+
 		return ti.Before(tj)
 	}
+
 	return s[i].Times < s[j].Times
 }
 
@@ -33,11 +35,12 @@ func (s SortSlice) Less(i, j int) bool {
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetAutoWrapText(false)
-	table.SetHeader([]string{"Id", "Cmd", "Extra", "FRE", "Last Update"})
+	table.SetHeader([]string{"ID", "AID", "Cmd", "Extra", "FRE", "Last Update"})
 	id := 1
 	for i := len(s) - 1; i >= 0; i-- {
 		table.Append([]string{
 			strconv.Itoa(id),
+			s[i].AliasID,
 			s[i].Cmd,
 			s[i].Extra,
 			strconv.FormatUint(uint64(s[i].Times), 10),

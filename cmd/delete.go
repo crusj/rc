@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/gookit/color"
 
 	"github.com/spf13/cobra"
 )
@@ -20,8 +23,8 @@ var (
 	// deleteCmd 删除命令
 	deleteCmd = &cobra.Command{
 		Use:   "d",
-		Short: "add cmd",
-		Long:  "add cmd from history file or update cmd frequency",
+		Short: "delete cmd",
+		Long:  "delete cmd by ID",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 
@@ -62,6 +65,20 @@ func handleDelete() error {
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
 		if _, exist := deleteIds[j]; exist {
+			color.Red.Printf("delete 【%s】\n", sortSlice[i].Cmd)
+
+			// restore tips
+			restoreStr := bytes.Buffer{}
+			restoreStr.WriteString(fmt.Sprintf(`restore use 【rc add "%s"`, sortSlice[i].Cmd))
+			if len(sortSlice[i].Extra) != 0 {
+				restoreStr.WriteString(fmt.Sprintf(` "%s"`, sortSlice[i].Extra))
+			}
+			if len(sortSlice[i].AliasID) != 0 {
+				restoreStr.WriteString(fmt.Sprintf(` "%s"`, sortSlice[i].AliasID))
+			}
+			restoreStr.WriteString("】")
+			color.Blue.Printf(restoreStr.String())
+
 			delete(cache, sortSlice[i].Cmd)
 		}
 		j++
@@ -71,5 +88,6 @@ func handleDelete() error {
 	if err != nil {
 		return err
 	}
+
 	return ioutil.WriteFile(cachePath, encode, 0666)
 }

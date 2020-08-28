@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -17,6 +18,7 @@ type (
 	// CacheDetail 是存储一条命令的相关信息
 	CacheDetail struct {
 		Cmd        string // 命令
+		AliasID    string // ID别名
 		Times      uint32 // 记录频率
 		LastUpdate string // 最后更新时间
 		Extra      string // 备注
@@ -32,13 +34,27 @@ type (
 )
 
 var (
-	// addCmd 是添加命令
+	// addCmd 添加命令历史命令最后一条到记录
+	reCmd = &cobra.Command{
+		Use:   "re",
+		Short: "remember last history cmd",
+		Long:  "re cmd from history file or update cmd frequency",
+		Run: func(cmd *cobra.Command, args []string) {
+			args = append(args, "", "")
+			err := handleRe(args[0], args[1])
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+	}
+	// addCmd 恢复命令,其实为跟具参数添加命令
 	addCmd = &cobra.Command{
 		Use:   "add",
 		Short: "add cmd",
-		Long:  "add cmd from history file or update cmd frequency",
+		Long:  "add cmd frequency",
 		Run: func(cmd *cobra.Command, args []string) {
-			err := handleAdd(append(args, "")[0])
+			args = append(args, "", "", "")
+			err := handleAdd(args[0], args[1], args[2])
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -48,11 +64,11 @@ var (
 
 // init 添加添加命令到根命令
 func init() {
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(reCmd, addCmd)
 }
 
-// handleAdd 执行添加命令
-func handleAdd(extra string) error {
+// handleRe 执行添加命令
+func handleRe(extra, alias string) error {
 	// 获取最后一条命令
 	lastCommand := getLastCommand()
 	// 获取已添加的命令
@@ -61,7 +77,18 @@ func handleAdd(extra string) error {
 		return err
 	}
 	// 计数加一或添加信息的命令
-	return setCommand(cache, lastCommand, extra)
+	return setCommand(cache, lastCommand, extra, alias)
+}
+
+// handleAdd 执行恢复命令
+func handleAdd(cmd, extra, alias string) error {
+	// 获取已添加的命令
+	cache, err := getCommands()
+	if err != nil {
+		return err
+	}
+	// 计数加一或添加信息的命令
+	return setCommand(cache, cmd, extra, alias)
 }
 
 // getLastCommand 返回用户历史命令中最后一条命令
@@ -111,16 +138,23 @@ func getCommands() (Cache, error) {
 }
 
 // setCommand 添加新命令到缓存文件,如果命令已存在则增加命令的频率
-func setCommand(cache Cache, cmd, extra string) error {
+func setCommand(cache Cache, cmd, extra, alias string) error {
+	if len(cmd) == 0 {
+		return errors.New("命令不能为空")
+	}
 	if _, exist := cache[cmd]; exist {
 		cache[cmd].Times++
 		cache[cmd].LastUpdate = time.Now().Format("2006-01-02 15:04:03")
 		if len(extra) != 0 {
 			cache[cmd].Extra = extra
 		}
+		if len(alias) != 0 {
+			cache[cmd].AliasID = alias
+		}
 	} else {
 		cache[cmd] = &CacheDetail{
 			Cmd:        cmd,
+			AliasID:    alias,
 			Times:      1,
 			Extra:      extra,
 			LastUpdate: time.Now().Format("2006-01-02 15:04:03"),
@@ -147,5 +181,5 @@ func cmdIncr(cmd string) error {
 		return err
 	}
 
-	return setCommand(cache, cmd, "")
+	return setCommand(cache, cmd, "", "")
 }
