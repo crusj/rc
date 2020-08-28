@@ -1,10 +1,10 @@
-/*
- * @Time : 2020/8/15 5:00 下午
- * @Author : 蒋龙
- * @File : vars.go
- */
 package cmd
-var(
+
+var (
+	// 命令历史记录文件
 	historyPath = "/Users/edz/.local/share/fish/fish_history"
-	cachePath   = "/var/rc/cache.log"
+	// 命令缓存文件
+	cachePath = "/var/rc/cache.log"
+	// 执行命令的shell
+	shell = "/usr/local/bin/fish"
 )

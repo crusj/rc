@@ -1,17 +1,13 @@
-/*
- * @Time : 2020/8/12 11:06 上午
- * @Author : 蒋龙
- * @File : add.go
- */
 package cmd
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/spf13/cobra"
 )
 
 /**
@@ -19,22 +15,26 @@ import (
  */
 
 var (
-	deleteIds = make(map[int]struct{}) // 需要删除的id
+	// deleteIds 需要删除的命令ID集合
+	deleteIds = make(map[int]struct{})
+	// deleteCmd 删除命令
 	deleteCmd = &cobra.Command{
 		Use:   "d",
 		Short: "add cmd",
 		Long:  "add cmd from history file or update cmd frequency",
 		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) <= 0 {
+			if len(args) == 0 {
+
 				return errors.New("miss delete id")
 			}
 			for _, v := range args {
 				id, err := strconv.Atoi(v)
 				if err != nil {
-					return errors.New(fmt.Sprintf("id %s invalid", v))
+					return fmt.Errorf("id %s invalid", v)
 				}
 				deleteIds[id] = struct{}{}
 			}
+
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -46,10 +46,13 @@ var (
 	}
 )
 
+// init 添加删除子命令到根命令
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 }
 
+// handleDelete 执行删除命令
+// 将命从缓存文件中删除
 func handleDelete() error {
 	cache, err := getCommands()
 	if err != nil {

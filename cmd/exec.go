@@ -18,11 +18,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// 执行命令历史中的命令
 var (
-	// 命令ID
+	// execID 需要执行的命令ID
 	execID = 0
-	// 执行ID对应命令
+	// execCmd 执行子命令
 	execCmd = &cobra.Command{
 		Use:   "e",
 		Short: "exec command",
@@ -44,7 +43,7 @@ var (
 			handleExec()
 		},
 	}
-	// 编辑命令缓存文件
+	// cacheCmd 编辑缓存子命令
 	cacheCmd = &cobra.Command{
 		Use:   "cache",
 		Short: "vim cache",
@@ -56,7 +55,7 @@ var (
 			}
 		},
 	}
-	// 赋值命令到clipboard
+	// cpCmd 复制命令子命令
 	cpCmd = &cobra.Command{
 		Use:   "cp ID",
 		Short: "copy command",
@@ -83,9 +82,12 @@ var (
 	}
 )
 
+// init 添加执行命令、编辑缓存、复制命令子命令到根命令
 func init() {
 	rootCmd.AddCommand(execCmd, cacheCmd, cpCmd)
 }
+
+// handleExec 执行子命令,并将命令频率加一
 func handleExec() {
 	var printOutput string
 	execCmd, err := getCommand()
@@ -95,7 +97,7 @@ func handleExec() {
 		return
 	}
 
-	cmd := exec.Command("/usr/local/bin/fish", "-c", execCmd)
+	cmd := exec.Command(shell, "-c", execCmd)
 	output := &bytes.Buffer{}
 	stdErr := &bytes.Buffer{}
 	cmd.Stdout = output
@@ -117,7 +119,7 @@ func handleExec() {
 	}
 }
 
-// 获取需要执行的命令
+// getCommand 根据ExecId获取对应命令
 func getCommand() (string, error) {
 	var (
 		execCmd string
@@ -147,7 +149,7 @@ func getCommand() (string, error) {
 	return execCmd, nil
 }
 
-// 复制命令到剪切板
+// handleCpExec 复制命令到剪切板
 func handleCpExec() error {
 	execCmd, err := getCommand()
 	if err != nil {
@@ -157,7 +159,7 @@ func handleCpExec() error {
 	return clipboard.WriteAll(execCmd)
 }
 
-// vim编辑缓存文件
+// handleEditCache 编辑缓存文件
 func handleEditCache() error {
 	command := exec.Command("vim", cachePath)
 	stdErr := &bytes.Buffer{}

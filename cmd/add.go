@@ -1,8 +1,3 @@
-/*
- * @Time : 2020/8/12 11:06 上午
- * @Author : 蒋龙
- * @File : add.go
- */
 package cmd
 
 import (
@@ -18,20 +13,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-/**
- * 添加或更新命令频率
- */
-
 type (
+	// CacheDetail 是存储一条命令的相关信息
 	CacheDetail struct {
 		Cmd        string // 命令
 		Times      uint32 // 记录频率
 		LastUpdate string // 最后更新时间
 		Extra      string // 备注
 	}
+	// Cache 是所有已存储的命令
 	Cache map[string]*CacheDetail
 
-	// 排序结构
+	//  SortStruct 是
 	SortStruct struct {
 		Times uint32
 		Cmd   string
@@ -39,6 +32,7 @@ type (
 )
 
 var (
+	// addCmd 是添加命令
 	addCmd = &cobra.Command{
 		Use:   "add",
 		Short: "add cmd",
@@ -52,10 +46,12 @@ var (
 	}
 )
 
+// init 添加添加命令到根命令
 func init() {
 	rootCmd.AddCommand(addCmd)
 }
 
+// handleAdd 执行添加命令
 func handleAdd(extra string) error {
 	// 获取最后一条命令
 	lastCommand := getLastCommand()
@@ -68,7 +64,7 @@ func handleAdd(extra string) error {
 	return setCommand(cache, lastCommand, extra)
 }
 
-// 获取最后一条命令
+// getLastCommand 返回用户历史命令中最后一条命令
 func getLastCommand() string {
 	c1 := exec.Command("grep", "cmd:", historyPath)
 	c2 := exec.Command("tail", "-n", "2")
@@ -90,7 +86,7 @@ func getLastCommand() string {
 	return strings.TrimSpace(stdOut.String())
 }
 
-// 获取已添加的命令
+// getCommands 返回已存储的命令
 func getCommands() (Cache, error) {
 	file, err := os.OpenFile(cachePath, os.O_CREATE, 0666)
 	if err != nil {
@@ -114,7 +110,7 @@ func getCommands() (Cache, error) {
 	return make(Cache), nil
 }
 
-// 添加命令
+// setCommand 添加新命令到缓存文件,如果命令已存在则增加命令的频率
 func setCommand(cache Cache, cmd, extra string) error {
 	if _, exist := cache[cmd]; exist {
 		cache[cmd].Times++
@@ -144,7 +140,7 @@ func setCommand(cache Cache, cmd, extra string) error {
 	return ioutil.WriteFile(cachePath, encode, 0666)
 }
 
-// 命令频率加一
+// cmdIncr 命令频率加一，如果命令不存在则新建命令
 func cmdIncr(cmd string) error {
 	cache, err := getCommands()
 	if err != nil {
