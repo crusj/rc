@@ -35,14 +35,27 @@ func (s SortSlice) Less(i, j int) bool {
 func (s SortSlice) Render() {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetAutoWrapText(false)
-	table.SetHeader([]string{"ID", "AID", "Cmd", "Extra", "FRE", "Last Update"})
+	table.SetHeader([]string{"ID", "AID", "Extra", "Cmd", "FRE", "Last Update"})
 	id := 1
+	table.SetRowLine(rowLine)
 	for i := len(s) - 1; i >= 0; i-- {
+		fmt.Println(star)
+		if s[i].Star {
+			s[i].Extra = "✨ " + s[i].Extra
+		}
+		if star {
+			fmt.Println(s[i].Star)
+			if !s[i].Star {
+				id++
+
+				continue
+			}
+		}
 		table.Append([]string{
 			strconv.Itoa(id),
 			s[i].AliasID,
-			s[i].Cmd,
 			s[i].Extra,
+			s[i].Cmd,
 			strconv.FormatUint(uint64(s[i].Times), 10),
 			s[i].LastUpdate,
 		})
@@ -52,6 +65,10 @@ func (s SortSlice) Render() {
 }
 
 var (
+	// rowLine is 是否显示row之间的行
+	rowLine bool
+	// star 是否只显示star的内容
+	star    bool
 	listCmd = &cobra.Command{
 		Use:   "l",
 		Short: "list commands",
@@ -67,6 +84,8 @@ var (
 
 // init 添加命令列表到子命令
 func init() {
+	listCmd.PersistentFlags().BoolVarP(&rowLine, "rowLine", "r", false, "table show row line")
+	listCmd.PersistentFlags().BoolVarP(&star, "star", "s", false, "table only show star cmd")
 	rootCmd.AddCommand(listCmd)
 }
 

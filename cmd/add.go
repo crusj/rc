@@ -22,6 +22,7 @@ type (
 		Times      uint32 // 记录频率
 		LastUpdate string // 最后更新时间
 		Extra      string // 备注
+		Star      bool // 是否star
 	}
 	// Cache 是所有已存储的命令
 	Cache map[string]*CacheDetail
