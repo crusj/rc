@@ -91,11 +91,19 @@ func init() {
 // handleList 执行显示命令列表
 func handleList() error {
 	// 最近命令
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	s := sortCommands(cache)
+	var max uint32
+	for _, c := range cache {
+		if c.Times > max {
+			max = c.Times
+		}
+	}
+	// s := sortCommands(cache)
+	// 计数排序具有稳定性稳定
+	s := CountSortS(cache, int(max))
 	// 打印
 	s.Render()
 
@@ -113,4 +121,30 @@ func sortCommands(cache Cache) SortSlice {
 	sort.Stable(s)
 
 	return s
+}
+
+// CountSort returns stable sort CacheDetails
+func CountSortS(A []*CacheDetail, max int) SortSlice {
+	if len(A) <= 1 {
+		return A
+	}
+	// 下标从0开始，不好弄，从1吧
+	A2 := []*CacheDetail{nil}
+	A2 = append(A2, A...)
+	counts := make([]int, max+1)
+	s := make([]*CacheDetail, len(A)+1)
+	// 计数
+	for i := 1; i <= len(A); i++ {
+		counts[A2[i].Times] = counts[A2[i].Times] + 1
+	}
+
+	for i := 2; i < len(counts); i++ {
+		counts[i] = counts[i] + counts[i-1]
+	}
+
+	for i := 1; i <= len(A); i++ {
+		s[counts[A2[i].Times]] = A2[i]
+		counts[A2[i].Times]--
+	}
+	return s[1:]
 }

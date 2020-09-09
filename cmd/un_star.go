@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gookit/color"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -34,7 +35,7 @@ var (
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			err := handleUnstar()
+			err := handleUnStar()
 			if err != nil {
 				fmt.Println(err.Error())
 			}
@@ -46,19 +47,33 @@ var (
 func init() {
 	rootCmd.AddCommand(unStarCmd)
 }
-func handleUnstar() error {
-	cache, err := getCommands()
+func handleUnStar() error {
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	sortSlice := sortCommands(cache)
+	var max uint32
+	for _, c := range cache {
+		if c.Times > max {
+			max = c.Times
+		}
+	}
+	sortSlice := CountSortS(cache, int(max))
+	// record unstar cmds
+	unStarCmds := make(map[string]struct{})
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
 		if _, exist := unStarIds[j]; exist {
-			color.Info.Printf("unStar 【%s】\n", sortSlice[i].Cmd)
-			cache[sortSlice[i].Cmd].Star = false
+			unStarCmds[sortSlice[i].Cmd] = struct{}{}
 		}
 		j++
+	}
+	// unset star
+	for i, v := range cache {
+		if _, exists := unStarCmds[v.Cmd]; exists {
+			cache[i].Star = false
+			color.Info.Printf("unstar 【%s】\n", cache[i].Cmd)
+		}
 	}
 	// 保存
 	encode, err := json.Marshal(cache)

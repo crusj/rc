@@ -22,10 +22,12 @@ type (
 		Times      uint32 // 记录频率
 		LastUpdate string // 最后更新时间
 		Extra      string // 备注
-		Star      bool // 是否star
+		Star       bool   // 是否star
 	}
 	// Cache 是所有已存储的命令
 	Cache map[string]*CacheDetail
+	// CacheS is cmd cache list
+	CacheS []*CacheDetail
 
 	//  SortStruct 是
 	SortStruct struct {
@@ -73,7 +75,7 @@ func handleRe(extra, alias string) error {
 	// 获取最后一条命令
 	lastCommand := getLastCommand()
 	// 获取已添加的命令
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
@@ -84,7 +86,7 @@ func handleRe(extra, alias string) error {
 // handleAdd 执行恢复命令
 func handleAdd(cmd, extra, alias string) error {
 	// 获取已添加的命令
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
@@ -114,8 +116,8 @@ func getLastCommand() string {
 	return strings.TrimSpace(stdOut.String())
 }
 
-// getCommands 返回已存储的命令
-func getCommands() (Cache, error) {
+// getCommandS returns slice of  command cache
+func getCommandS() (CacheS, error) {
 	file, err := os.OpenFile(cachePath, os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
@@ -125,41 +127,47 @@ func getCommands() (Cache, error) {
 	if err != nil {
 		return nil, err
 	}
-	var cache Cache
+	var cacheS CacheS
 	if len(content) > 0 {
-		err = json.Unmarshal(content, &cache)
+		err = json.Unmarshal(content, &cacheS)
 		if err != nil {
 			return nil, err
 		}
 
-		return cache, nil
+		return cacheS, nil
 	}
 
-	return make(Cache), nil
+	return make(CacheS, 0), nil
 }
 
 // setCommand 添加新命令到缓存文件,如果命令已存在则增加命令的频率
-func setCommand(cache Cache, cmd, extra, alias string) error {
+func setCommand(cache CacheS, cmd, extra, alias string) error {
 	if len(cmd) == 0 {
 		return errors.New("命令不能为空")
 	}
-	if _, exist := cache[cmd]; exist {
-		cache[cmd].Times++
-		cache[cmd].LastUpdate = time.Now().Format("2006-01-02 15:04:03")
-		if len(extra) != 0 {
-			cache[cmd].Extra = extra
+	exists := false
+	for i, v := range cache {
+		if v.Cmd == cmd {
+			cache[i].Times++
+			cache[i].LastUpdate = time.Now().Format("2006-01-02 15:04:03")
+			if len(extra) != 0 {
+				cache[i].Extra = extra
+			}
+			if len(alias) != 0 {
+				cache[i].AliasID = alias
+			}
+			exists = true
+			break
 		}
-		if len(alias) != 0 {
-			cache[cmd].AliasID = alias
-		}
-	} else {
-		cache[cmd] = &CacheDetail{
+	}
+	if !exists {
+		cache = append(cache, &CacheDetail{
 			Cmd:        cmd,
 			AliasID:    alias,
 			Times:      1,
 			Extra:      extra,
 			LastUpdate: time.Now().Format("2006-01-02 15:04:03"),
-		}
+		})
 	}
 	encode, err := json.Marshal(cache)
 	if err != nil {
@@ -177,7 +185,7 @@ func setCommand(cache Cache, cmd, extra, alias string) error {
 
 // cmdIncr 命令频率加一，如果命令不存在则新建命令
 func cmdIncr(cmd string) error {
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}

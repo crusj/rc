@@ -57,32 +57,49 @@ func init() {
 // handleDelete 执行删除命令
 // 将命从缓存文件中删除
 func handleDelete() error {
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	sortSlice := sortCommands(cache)
+	var max uint32
+	for _, c := range cache {
+		if c.Times > max {
+			max = c.Times
+		}
+	}
+	sortSlice := CountSortS(cache, int(max))
+
+	// record cmds
+	deleteCmd := make(map[string]struct{})
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
 		if _, exist := deleteIds[j]; exist {
-			color.Red.Printf("delete 【%s】\n", sortSlice[i].Cmd)
-
-			// restore tips
-			restoreStr := bytes.Buffer{}
-			restoreStr.WriteString(fmt.Sprintf(`restore use 【rc add "%s"`, sortSlice[i].Cmd))
-			if len(sortSlice[i].Extra) != 0 {
-				restoreStr.WriteString(fmt.Sprintf(` "%s"`, sortSlice[i].Extra))
-			}
-			if len(sortSlice[i].AliasID) != 0 {
-				restoreStr.WriteString(fmt.Sprintf(` "%s"`, sortSlice[i].AliasID))
-			}
-			restoreStr.WriteString("】")
-			color.Blue.Printf(restoreStr.String())
-
-			delete(cache, sortSlice[i].Cmd)
+			deleteCmd[sortSlice[i].Cmd] = struct{}{}
 		}
 		j++
 	}
+	// delete elem
+	for i := 0; i < len(cache); i++ {
+		if _, exists := deleteCmd[cache[i].Cmd]; exists {
+			// delete info
+			color.Red.Printf("delete 【%s】\n", cache[i].Cmd)
+			// restore tips
+			restoreStr := bytes.Buffer{}
+			restoreStr.WriteString(fmt.Sprintf(`restore use 【rc add "%s"`, cache[i].Cmd))
+			if len(cache[i].Extra) != 0 {
+				restoreStr.WriteString(fmt.Sprintf(` "%s"`, cache[i].Extra))
+			}
+			if len(cache[i].AliasID) != 0 {
+				restoreStr.WriteString(fmt.Sprintf(` "%s"`, cache[i].AliasID))
+			}
+			restoreStr.WriteString("】\n")
+			color.Blue.Printf(restoreStr.String())
+
+			cache = append(cache[:i], cache[i+1:]...)
+			i--
+		}
+	}
+
 	// 保存
 	encode, err := json.Marshal(cache)
 	if err != nil {

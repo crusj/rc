@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gookit/color"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/gookit/color"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -47,18 +48,32 @@ func init() {
 	rootCmd.AddCommand(starCmd)
 }
 func handleStar() error {
-	cache, err := getCommands()
+	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	sortSlice := sortCommands(cache)
+	var max uint32
+	for _, c := range cache {
+		if c.Times > max {
+			max = c.Times
+		}
+	}
+	sortSlice := CountSortS(cache, int(max))
+	// record star cmds
+	starCmds := make(map[string]struct{})
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
 		if _, exist := starIds[j]; exist {
-			color.Info.Printf("star 【%s】\n", sortSlice[i].Cmd)
-			cache[sortSlice[i].Cmd].Star = true
+			starCmds[sortSlice[i].Cmd] = struct{}{}
 		}
 		j++
+	}
+	// set star
+	for i, v := range cache {
+		if _, exists := starCmds[v.Cmd]; exists {
+			cache[i].Star = true
+			color.Info.Printf("star 【%s】\n", cache[i].Cmd)
+		}
 	}
 	// 保存
 	encode, err := json.Marshal(cache)
