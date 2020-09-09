@@ -39,7 +39,6 @@ func (s SortSlice) Render() {
 	id := 1
 	table.SetRowLine(rowLine)
 	for i := len(s) - 1; i >= 0; i-- {
-		fmt.Println(star)
 		if s[i].Star {
 			s[i].Extra = "✨ " + s[i].Extra
 		}
