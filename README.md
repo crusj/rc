@@ -34,6 +34,10 @@ Remember the last command of the terminal and its frequency
 * 修改命令用bash执行
 * 执行缓存的命令后，频率自增1
 
+#### 2020-09-08
+* 增加/取消命令星号
+* 列表显示可以只显示星号的列表
+
 ### todo
 
 * [ ] 配置文件
