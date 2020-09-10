@@ -133,14 +133,8 @@ func getCommand() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var max uint32
-	for _, c := range cache {
-		if c.Times > max {
-			max = c.Times
-		}
-	}
 	// 排序
-	sortSlice := CountSortS(cache, int(max))
+	sortSlice := CountSortS(cache, int(cache.getMaxFre()))
 	// 根据排序ID获取需要执行的命令
 	// ID排序频率从大到小需要倒着取
 	j := 1

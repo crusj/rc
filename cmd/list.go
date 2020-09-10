@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strconv"
 	"time"
 
@@ -42,8 +41,7 @@ func (s SortSlice) Render() {
 		if s[i].Star {
 			s[i].Extra = "✨ " + s[i].Extra
 		}
-		if star {
-			fmt.Println(s[i].Star)
+		if onlyShowStar {
 			if !s[i].Star {
 				id++
 
@@ -66,9 +64,9 @@ func (s SortSlice) Render() {
 var (
 	// rowLine is 是否显示row之间的行
 	rowLine bool
-	// star 是否只显示star的内容
-	star    bool
-	listCmd = &cobra.Command{
+	// onlyShowStar 是否只显示star的内容
+	onlyShowStar bool
+	listCmd      = &cobra.Command{
 		Use:   "l",
 		Short: "list commands",
 		Long:  "list commands with table",
@@ -81,10 +79,10 @@ var (
 	}
 )
 
-// init 添加命令列表到子命令
+// init add subcommand listCmd to the rootCmd
 func init() {
 	listCmd.PersistentFlags().BoolVarP(&rowLine, "rowLine", "r", false, "table show row line")
-	listCmd.PersistentFlags().BoolVarP(&star, "star", "s", false, "table only show star cmd")
+	listCmd.PersistentFlags().BoolVarP(&onlyShowStar, "onlyShowStar", "s", false, "table only show onlyShowStar cmd")
 	rootCmd.AddCommand(listCmd)
 }
 
@@ -95,32 +93,13 @@ func handleList() error {
 	if err != nil {
 		return err
 	}
-	var max uint32
-	for _, c := range cache {
-		if c.Times > max {
-			max = c.Times
-		}
-	}
 	// s := sortCommands(cache)
 	// 计数排序具有稳定性稳定
-	s := CountSortS(cache, int(max))
+	s := CountSortS(cache, int(cache.getMaxFre()))
 	// 打印
 	s.Render()
 
 	return nil
-}
-
-// sortCommands 将命令进行排序，返回已排序的命令
-func sortCommands(cache Cache) SortSlice {
-	s := make(SortSlice, len(cache))
-	index := 0
-	for _, v := range cache {
-		s[index] = v
-		index++
-	}
-	sort.Stable(s)
-
-	return s
 }
 
 // CountSort returns stable sort CacheDetails

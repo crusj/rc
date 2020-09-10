@@ -24,8 +24,6 @@ type (
 		Extra      string // 备注
 		Star       bool   // 是否star
 	}
-	// Cache 是所有已存储的命令
-	Cache map[string]*CacheDetail
 	// CacheS is cmd cache list
 	CacheS []*CacheDetail
 
@@ -35,6 +33,22 @@ type (
 		Cmd   string
 	}
 )
+
+// getMaxFre returns the max frequency of the cache
+func (c CacheS) getMaxFre() uint32 {
+	return getMaxFre(c)
+}
+
+// getMaxFre is the really implementation of getMaxFre
+func getMaxFre(cache CacheS) uint32 {
+	var max uint32
+	for _, c := range cache {
+		if c.Times > max {
+			max = c.Times
+		}
+	}
+	return max
+}
 
 var (
 	// addCmd 添加命令历史命令最后一条到记录
@@ -50,6 +64,7 @@ var (
 			}
 		},
 	}
+
 	// addCmd 恢复命令,其实为跟具参数添加命令
 	addCmd = &cobra.Command{
 		Use:   "add",
@@ -65,7 +80,7 @@ var (
 	}
 )
 
-// init 添加添加命令到根命令
+// init add subcommands reCmd and addCmd to the rootCmd
 func init() {
 	rootCmd.AddCommand(reCmd, addCmd)
 }
@@ -79,6 +94,7 @@ func handleRe(extra, alias string) error {
 	if err != nil {
 		return err
 	}
+
 	// 计数加一或添加信息的命令
 	return setCommand(cache, lastCommand, extra, alias)
 }
@@ -90,6 +106,7 @@ func handleAdd(cmd, extra, alias string) error {
 	if err != nil {
 		return err
 	}
+
 	// 计数加一或添加信息的命令
 	return setCommand(cache, cmd, extra, alias)
 }

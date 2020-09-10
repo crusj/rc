@@ -1,19 +1,14 @@
 package cmd
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 
-	"github.com/gookit/color"
 	"github.com/spf13/cobra"
 )
 
 var (
-	// unStarIds 需要unStar的命令ID集合
-	unStarIds = make(map[int]struct{})
 	// unStarCmd unStar命令
 	unStarCmd = &cobra.Command{
 		Use:   "us",
@@ -29,7 +24,7 @@ var (
 				if err != nil {
 					return fmt.Errorf("id %s invalid", v)
 				}
-				unStarIds[id] = struct{}{}
+				starIds[id] = struct{}{}
 			}
 
 			return nil
@@ -43,43 +38,17 @@ var (
 	}
 )
 
-// init 添加unStar子命令到根命令
+// init add the subcommand unStarCmd to rootCmd
 func init() {
 	rootCmd.AddCommand(unStarCmd)
 }
+
+// handleUnStar is not staring command
 func handleUnStar() error {
 	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	var max uint32
-	for _, c := range cache {
-		if c.Times > max {
-			max = c.Times
-		}
-	}
-	sortSlice := CountSortS(cache, int(max))
-	// record unstar cmds
-	unStarCmds := make(map[string]struct{})
-	j := 1
-	for i := len(sortSlice) - 1; i >= 0; i-- {
-		if _, exist := unStarIds[j]; exist {
-			unStarCmds[sortSlice[i].Cmd] = struct{}{}
-		}
-		j++
-	}
-	// unset star
-	for i, v := range cache {
-		if _, exists := unStarCmds[v.Cmd]; exists {
-			cache[i].Star = false
-			color.Info.Printf("unstar 【%s】\n", cache[i].Cmd)
-		}
-	}
-	// 保存
-	encode, err := json.Marshal(cache)
-	if err != nil {
-		return err
-	}
 
-	return ioutil.WriteFile(cachePath, encode, 0666)
+	return starOrCancel(cache, starF)
 }

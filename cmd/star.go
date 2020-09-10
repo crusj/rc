@@ -17,12 +17,12 @@ var (
 	// starCmd star命令
 	starCmd = &cobra.Command{
 		Use:   "s",
-		Short: "star cmd",
-		Long:  "star cmd by ID",
+		Short: "onlyShowStar cmd",
+		Long:  "onlyShowStar cmd by ID",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 
-				return errors.New("miss star id")
+				return errors.New("miss onlyShowStar id")
 			}
 			for _, v := range args {
 				id, err := strconv.Atoi(v)
@@ -43,36 +43,51 @@ var (
 	}
 )
 
-// init 添加star子命令到根命令
+// starStatus represents the status of command
+type starStatus bool
+
+func (s starStatus) String() string {
+	if s {
+		return "onlyShowStar"
+	}
+
+	return "unStar"
+}
+
+var (
+	starT starStatus = true
+	starF starStatus = false
+)
+
+// init add subcommand starStatus to rootCmd
 func init() {
 	rootCmd.AddCommand(starCmd)
 }
+
 func handleStar() error {
 	cache, err := getCommandS()
 	if err != nil {
 		return err
 	}
-	var max uint32
-	for _, c := range cache {
-		if c.Times > max {
-			max = c.Times
-		}
-	}
-	sortSlice := CountSortS(cache, int(max))
-	// record star cmds
-	starCmds := make(map[string]struct{})
+	return starOrCancel(cache, starT)
+}
+
+// starOrCancel is staring or canceling command
+func starOrCancel(cache CacheS, star starStatus) error {
+	sortSlice := CountSortS(cache, int(cache.getMaxFre()))
+	// record onlyShowStar cmds
+	commands := make(map[string]struct{})
 	j := 1
 	for i := len(sortSlice) - 1; i >= 0; i-- {
 		if _, exist := starIds[j]; exist {
-			starCmds[sortSlice[i].Cmd] = struct{}{}
+			commands[sortSlice[i].Cmd] = struct{}{}
 		}
 		j++
 	}
-	// set star
 	for i, v := range cache {
-		if _, exists := starCmds[v.Cmd]; exists {
-			cache[i].Star = true
-			color.Info.Printf("star 【%s】\n", cache[i].Cmd)
+		if _, exists := commands[v.Cmd]; exists {
+			cache[i].Star = bool(star)
+			color.Info.Printf("%v 【%s】\n", star.String(), cache[i].Cmd)
 		}
 	}
 	// 保存

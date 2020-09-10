@@ -49,7 +49,7 @@ var (
 	}
 )
 
-// init 添加删除子命令到根命令
+// init add subcommand deleteCmd to the rootCmd
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 }
@@ -61,13 +61,7 @@ func handleDelete() error {
 	if err != nil {
 		return err
 	}
-	var max uint32
-	for _, c := range cache {
-		if c.Times > max {
-			max = c.Times
-		}
-	}
-	sortSlice := CountSortS(cache, int(max))
+	sortSlice := CountSortS(cache, int(cache.getMaxFre()))
 
 	// record cmds
 	deleteCmd := make(map[string]struct{})
