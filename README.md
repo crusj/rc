@@ -38,6 +38,9 @@ Remember the last command of the terminal and its frequency
 * 增加/取消命令星号
 * 列表显示可以只显示星号的列表
 
+#### 2021-09-01
+* cp子命令支持AID
+
 ### todo
 
 * [ ] 配置文件

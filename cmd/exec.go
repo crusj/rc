@@ -71,7 +71,7 @@ var (
 			// 暂时支持一个命令执行
 			execID, err = strconv.Atoi(args[0])
 			if err != nil {
-				return err
+				AliasID = args[0]
 			}
 
 			return nil
